@@ -9,6 +9,8 @@ use crate::{
     },
     AptosVM,
 };
+use aptos_gas_algebra::Fee;
+use aptos_types::transaction::user_transaction_context::UserTransactionContext;
 use aptos_vm_types::{change_set::VMChangeSet, storage::change_set_configs::ChangeSetConfigs};
 use move_core_types::vm_status::{err_msg, StatusCode, VMStatus};
 
@@ -38,6 +40,7 @@ impl<'r, 'l> RespawnedSession<'r, 'l> {
         session_id: SessionId,
         base: &'r impl AptosMoveResolver,
         previous_session_change_set: VMChangeSet,
+        user_transaction_context_opt: Option<UserTransactionContext>,
     ) -> Result<Self, VMStatus> {
         let executor_view = ExecutorViewWithChangeSet::new(
             base.as_executor_view(),
@@ -48,7 +51,9 @@ impl<'r, 'l> RespawnedSession<'r, 'l> {
         Ok(RespawnedSessionBuilder {
             executor_view,
             resolver_builder: |executor_view| vm.as_move_resolver_with_group_view(executor_view),
-            session_builder: |resolver| Some(vm.new_session(resolver, session_id)),
+            session_builder: |resolver| {
+                Some(vm.new_session(resolver, session_id, user_transaction_context_opt))
+            },
         }
         .build())
     }
