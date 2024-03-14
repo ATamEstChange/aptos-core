@@ -11125,6 +11125,7 @@ dependencies = [
  "evm-exec-utils",
  "hex",
  "itertools 0.10.5",
+ "log",
  "move-abigen",
  "move-binary-format",
  "move-bytecode-source-map",

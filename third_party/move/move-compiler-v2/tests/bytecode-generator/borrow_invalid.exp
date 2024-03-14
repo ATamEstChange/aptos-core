@@ -12,7 +12,7 @@ module 0x42::borrow {
     }
     private fun mut_field(s: &borrow::S): u64 {
         {
-          let r: &mut u64 = Borrow(Mutable)(select borrow::S.f(s));
+          let r: &mut u64 = Borrow(Mutable)(select borrow::S.f<&borrow::S>(s));
           r = 22;
           Deref(r)
         }
