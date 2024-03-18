@@ -32,7 +32,7 @@ impl Experiment {
     /// they produce.
     /// Retention: permanent.
     pub const NO_SAFETY: &'static str = "no-safety";
-    /// The compiler runs a default pipeline of stackless bytecode optimizations.
+    /// The compiler runs a default pipeline of stackless bytecode (SBC) optimizations.
     /// This flag allows to turn off these optimizations.
     /// Retention: temporary. To be removed when various optimization pipeline combos
     /// can be controlled via user-accessible configs.
