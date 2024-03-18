@@ -293,6 +293,8 @@ pub fn bytecode_pipeline(env: &GlobalEnv) -> FunctionTargetPipeline {
 fn add_default_optimization_pipeline(pipeline: &mut FunctionTargetPipeline) {
     pipeline.add_processor(Box::new(UnreachableCodeProcessor {}));
     pipeline.add_processor(Box::new(UnreachableCodeRemover {}));
+    pipeline.add_processor(Box::new(LiveVarAnalysisProcessor::new(true)));
+    pipeline.add_processor(Box::new(DeadStoreElimination {}));
     pipeline.add_processor(Box::new(LiveVarAnalysisProcessor::new(false)));
     pipeline.add_processor(Box::new(VariableCoalescing::transform_only()));
     pipeline.add_processor(Box::new(LiveVarAnalysisProcessor::new(true)));

@@ -108,14 +108,20 @@ impl TestConfig {
         // Get path to allow path-specific test configuration
         let path = path.to_string_lossy();
 
-        // turn on simplifier unless doing no-simplifier or variable-coalescing tests.
+        // Paths for which we do not run the AST simplifier.
+        let no_simplifier_paths = vec![
+            "/no-simplifier/",
+            "/variable-coalescing/",
+            "/default-sbc-optimize/",
+        ];
+        // Turn on simplifier unless in one of the above paths.
         if path.contains("/simplifier-elimination/") {
             env_pipeline.add("simplifier", |env: &mut GlobalEnv| {
                 ast_simplifier::run_simplifier(
                     env, true, // Code elimination
                 )
             });
-        } else if !(path.contains("/no-simplifier/") || path.contains("variable-coalescing")) {
+        } else if !(no_simplifier_paths.into_iter().any(|p| path.contains(p))) {
             env_pipeline.add("simplifier", |env: &mut GlobalEnv| {
                 ast_simplifier::run_simplifier(
                     env, false, // No code elimination
@@ -347,6 +353,40 @@ impl TestConfig {
             ));
             pipeline.add_processor(Box::new(VariableCoalescing::annotate_only()));
             pipeline.add_processor(Box::new(VariableCoalescing::transform_only()));
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                LiveVarAnalysisProcessor::new(true),
+            ));
+            pipeline.add_processor(Box::new(DeadStoreElimination {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                LiveVarAnalysisProcessor::new(false),
+            ));
+            Self {
+                stop_before_generating_bytecode: false,
+                dump_ast: AstDumpLevel::None,
+                env_pipeline,
+                pipeline,
+                generate_file_format: true,
+                dump_annotated_targets: true,
+            }
+        } else if path.contains("/default-sbc-optimize/") {
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                LiveVarAnalysisProcessor::new(false),
+            ));
+            pipeline.add_processor_without_annotation_dump(Box::new(ReferenceSafetyProcessor {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(ExitStateAnalysisProcessor {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(AbilityProcessor {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(UnreachableCodeProcessor {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(UnreachableCodeRemover {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                LiveVarAnalysisProcessor::new(true),
+            ));
+            pipeline.add_processor_without_annotation_dump(Box::new(DeadStoreElimination {}));
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                LiveVarAnalysisProcessor::new(false),
+            ));
+            pipeline.add_processor_without_annotation_dump(Box::new(
+                VariableCoalescing::transform_only(),
+            ));
             pipeline.add_processor_without_annotation_dump(Box::new(
                 LiveVarAnalysisProcessor::new(true),
             ));
